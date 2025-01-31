@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>Detail Berita - Kalirejo</title>
+  <title>Detail UMKM - Kalirejo</title>
   <meta content="Detail berita terbaru dari Desa Kalirejo" name="description">
   <meta content="" name="keywords">
 
@@ -128,7 +128,7 @@
         <div class="row">
           <div class="col-lg-8 mx-auto">
             <!-- News Title -->
-            <h1 class="news-title">Judul Berita</h1>
+            <h1 class="news-title">Judul UMKM</h1>
             <!-- Image Slider -->
             <div id="newsCarousel" class="carousel slide" data-bs-ride="carousel">
               <div class="carousel-inner">
@@ -171,13 +171,16 @@
 
         <!-- Back to List -->
         <div class="text-center mt-5">
-          <a href="news.html" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Kembali ke Daftar Berita</a>
+          <a href="umkm.html" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Kembali ke Daftar Umkm</a>
         </div>
       </div>
     </section>
   </main>
 
-
+  <!-- WhatsApp Button -->
+  <a href="https://wa.me/6289643721080" target="_blank" class="whatsapp-button" id="contactButton">
+    <i class="bi bi-whatsapp"></i> Hubungi Kami
+  </a>
 
   <!-- Vendor JS Files -->
   <script src="assets/vendor/aos/aos.js"></script>
@@ -196,75 +199,80 @@
       .then(data => document.getElementById('header').innerHTML = data);
   </script>
 <script>
-  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXz7vyxWHRch4SzltCRSiA8jSokcJZb8oakTEXYumFMo6xoJG5wHPMUQPpmw7qRGY3ooGCWKRDSrqa/pub?output=csv";
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlKmyR87hHajmRqWbI-iF1Oa8-NYN6RDDfznSJgnu-BMLq3gKcuJvlh4fj6yUBgVgFyVcNgLAc2qRc/pub?output=csv";
 
   // Get the ID from the URL query parameter
   const urlParams = new URLSearchParams(window.location.search);
   const newsId = parseInt(urlParams.get("id"));
 
-// Import PapaParse for robust CSV parsing
-// You can include this library via script tag or npm if using a Node.js environment
-async function fetchAndDisplayNewsDetail() {
-  try {
-    const response = await fetch(csvUrl);
-    const csvText = await response.text();
+  async function fetchAndDisplayNewsDetail() {
+    try {
+      const response = await fetch(csvUrl);
+      const csvText = await response.text();
 
-    // Use PapaParse for robust CSV parsing
-    Papa.parse(csvText, {
-      header: false,
-      skipEmptyLines: true,
-      complete: function(results) {
-        const rows = results.data;
-        const headers = rows.shift(); // Remove header row
-        console.log(rows);
-        const newsData = rows.map(row => ({
-          title: row[0]?.trim(), // JUDUL column
-          excerpt: row[1]?.trim(), // DESC column
-          images: row[2]?.replace(/\"/g, "").split(",").map(url => url.trim()), // IMAGES column
-          content: row[3]?.trim() // CONTENT column
-        }));
+      // Use PapaParse for robust CSV parsing
+      Papa.parse(csvText, {
+        header: false,
+        skipEmptyLines: true,
+        complete: function(results) {
+          const rows = results.data;
+          rows.shift(); // Remove header row
+          console.log(rows);
+          const newsData = rows.map(row => ({
+            title: row[0]?.trim(), // JUDUL column
+            excerpt: row[1]?.trim(), // DESC column
+            images: row[2]?.replace(/\"/g, "").split(",").map(url => url.trim()), // IMAGES column
+            content: row[3]?.trim(), // CONTENT column
+            contact: row[4]?.trim() // CONTACT column
+          }));
 
-        // Validate newsId
-        if (isNaN(newsId) || newsId < 1 || newsId > newsData.length) {
-          document.querySelector(".news-title").textContent = "Berita tidak ditemukan";
-          return;
+          // Validate newsId
+          if (isNaN(newsId) || newsId < 1 || newsId > newsData.length) {
+            document.querySelector(".news-title").textContent = "Berita tidak ditemukan";
+            return;
+          }
+
+          // Get the news item by ID
+          const newsItem = newsData[newsId - 1];
+
+          // Update the title
+          document.querySelector(".news-title").textContent = newsItem.title || "Judul Tidak Tersedia";
+
+          // Update the carousel with images
+          const carouselInner = document.querySelector(".carousel-inner");
+          if (newsItem.images && newsItem.images.length > 0) {
+            carouselInner.innerHTML = newsItem.images
+              .map((imageUrl, index) => `
+                <div class="carousel-item ${index === 0 ? "active" : ""}">
+                  <img src="${imageUrl}" alt="News Image ${index + 1}">
+                </div>
+              `)
+              .join("");
+          } else {
+            carouselInner.innerHTML = '<div class="carousel-item active"><p>No images available</p></div>';
+          }
+
+          // Update the news content
+          document.querySelector(".news-content").innerHTML = newsItem.content || "Konten tidak tersedia.";
+
+          // Update the WhatsApp contact link
+          if (newsItem.contact) {
+            const whatsappButton = document.getElementById("contactButton");
+            whatsappButton.href = `https://wa.me/${newsItem.contact.replace(/\D/g, '')}`;
+          }
         }
+      });
 
-        // Get the news item by ID
-        const newsItem = newsData[newsId - 1];
-
-        // Update the title
-        document.querySelector(".news-title").textContent = newsItem.title || "Judul Tidak Tersedia";
-
-        // Update the carousel with images
-        const carouselInner = document.querySelector(".carousel-inner");
-        if (newsItem.images && newsItem.images.length > 0) {
-          carouselInner.innerHTML = newsItem.images
-            .map((imageUrl, index) => `
-              <div class="carousel-item ${index === 0 ? "active" : ""}">
-                <img src="${imageUrl}" alt="News Image ${index + 1}">
-              </div>
-            `)
-            .join("");
-        } else {
-          carouselInner.innerHTML = '<div class="carousel-item active"><p>No images available</p></div>';
-        }
-
-        // Update the news content
-        document.querySelector(".news-content").innerHTML = newsItem.content || "Konten tidak tersedia.";
-      }
-    });
-
-  } catch (error) {
-    console.error("Error fetching or displaying the news details:", error);
-    document.querySelector(".news-title").textContent = "Terjadi kesalahan";
+    } catch (error) {
+      console.error("Error fetching or displaying the news details:", error);
+      document.querySelector(".news-title").textContent = "Terjadi kesalahan";
+    }
   }
-}
 
-// Load news details on page load
-fetchAndDisplayNewsDetail();
-
+  // Load news details on page load
+  fetchAndDisplayNewsDetail();
 </script>
+
 
 </body>
 
